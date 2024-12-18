@@ -43,7 +43,7 @@ class Order(db.Model):
 
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
     user = db.relationship('User', back_populates='cart')
     items = db.relationship('CartItem', backref='cart', lazy=True, cascade='all, delete-orphan')
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from ..models import Product, Cart, CartItem, db
@@ -59,7 +59,53 @@ def add_to_cart():
         db.session.add(cart_item)
 
     db.session.commit()
-    return jsonify({"message": "Item added to cart successfully", "cart_count": len(cart.items)}), 200
+    return jsonify({"message": "Item added to cart successfully", "cart_count": sum(item.quantity for item in cart.items)}), 200
+
+@bp.route('/api/remove-from-cart', methods=['POST'])
+@login_required
+def remove_from_cart():
+    data = request.get_json()
+    product_id = data.get('productId')
+    
+    if not product_id:
+        return jsonify({"message": "Product ID is required"}), 400
+
+    cart = current_user.cart
+    if not cart:
+        return jsonify({"message": "Cart is empty"}), 400
+
+    cart_item = CartItem.query.filter_by(cart=cart, product_id=product_id).first()
+    if cart_item:
+        db.session.delete(cart_item)
+        db.session.commit()
+        return jsonify({"message": "Item removed from cart successfully", "cart_count": sum(item.quantity for item in cart.items)}), 200
+    else:
+        return jsonify({"message": "Item not found in cart"}), 404
+
+@bp.route('/api/update-cart-quantity', methods=['POST'])
+@login_required
+def update_cart_quantity():
+    data = request.get_json()
+    product_id = data.get('productId')
+    quantity = data.get('quantity')
+    
+    if not product_id or quantity is None:
+        return jsonify({"message": "Product ID and quantity are required"}), 400
+
+    cart = current_user.cart
+    if not cart:
+        return jsonify({"message": "Cart is empty"}), 400
+
+    cart_item = CartItem.query.filter_by(cart=cart, product_id=product_id).first()
+    if cart_item:
+        if quantity > 0:
+            cart_item.quantity = quantity
+        else:
+            db.session.delete(cart_item)
+        db.session.commit()
+        return jsonify({"message": "Cart updated successfully", "cart_count": sum(item.quantity for item in cart.items)}), 200
+    else:
+        return jsonify({"message": "Item not found in cart"}), 404
 
 @bp.route('/api/cart-count')
 @login_required

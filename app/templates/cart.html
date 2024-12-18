@@ -8,16 +8,21 @@
     {% if cart_items %}
         <div class="cart-items">
             {% for item in cart_items %}
-            <div class="cart-item">
-                <h3>{{ item.name }}</h3>
-                <p>Price: ${{ "%.2f"|format(item.price) }}</p>
-                <p>Quantity: {{ item.quantity }}</p>
-                <p>Subtotal: ${{ "%.2f"|format(item.price * item.quantity) }}</p>
+            <div class="cart-item" data-product-id="{{ item.product.id }}">
+                <h3>{{ item.product.name }}</h3>
+                <p>Price: ${{ "%.2f"|format(item.product.price) }}</p>
+                <div class="quantity-control">
+                    <button class="decrease-quantity">-</button>
+                    <input type="number" class="item-quantity" value="{{ item.quantity }}" min="1">
+                    <button class="increase-quantity">+</button>
+                </div>
+                <p class="subtotal">Subtotal: $<span>{{ "%.2f"|format(item.product.price * item.quantity) }}</span></p>
+                <button class="remove-item">Remove</button>
             </div>
             {% endfor %}
         </div>
         <div class="cart-total">
-            <h2>Total: ${{ "%.2f"|format(total) }}</h2>
+            <h2>Total: $<span id="cart-total">{{ "%.2f"|format(total) }}</span></h2>
         </div>
         <a href="{{ url_for('account.checkout') }}" class="btn btn-primary">Proceed to Checkout</a>
     {% else %}
@@ -25,4 +30,103 @@
         <a href="{{ url_for('main.store') }}" class="btn btn-primary">Continue Shopping</a>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cartItems = document.querySelectorAll('.cart-item');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    cartItems.forEach(item => {
+        const productId = item.dataset.productId;
+        const quantityInput= item.querySelector('.item-quantity');
+        const decreaseBtn = item.querySelector('.decrease-quantity');
+        const increaseBtn = item.querySelector('.increase-quantity');
+        const removeBtn = item.querySelector('.remove-item');
+        const subtotalSpan = item.querySelector('.subtotal span');
+
+        function updateQuantity(newQuantity) {
+            fetch('/api/update-cart-quantity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ productId: productId, quantity: newQuantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === "Cart updated successfully") {
+                    quantityInput.value = newQuantity;
+                    updateSubtotal();
+                    updateCartTotal();
+                    updateCartIcon(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function updateSubtotal() {
+            const price = parseFloat(item.querySelector('p').textContent.split('$')[1]);
+            const quantity = parseInt(quantityInput.value);
+            const subtotal = price * quantity;
+            subtotalSpan.textContent = subtotal.toFixed(2);
+        }
+
+        decreaseBtn.addEventListener('click', () => {
+            const newQuantity = parseInt(quantityInput.value) - 1;
+            if (newQuantity >= 1) {
+                updateQuantity(newQuantity);
+            }
+        });
+
+        increaseBtn.addEventListener('click', () => {
+            const newQuantity = parseInt(quantityInput.value) + 1;
+            updateQuantity(newQuantity);
+        });
+
+        quantityInput.addEventListener('change', () => {
+            const newQuantity = parseInt(quantityInput.value);
+            if (newQuantity >= 1) {
+                updateQuantity(newQuantity);
+            } else {
+                quantityInput.value = 1;
+            }
+        });
+
+        removeBtn.addEventListener('click', () => {
+            fetch('/api/remove-from-cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ productId: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === "Item removed from cart successfully") {
+                    item.remove();
+                    updateCartTotal();
+                    updateCartIcon(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    function updateCartTotal() {
+        const subtotals = document.querySelectorAll('.subtotal span');
+        const total = Array.from(subtotals).reduce((sum, span) => sum + parseFloat(span.textContent), 0);
+        document.getElementById('cart-total').textContent = total.toFixed(2);
+    }
+
+    function updateCartIcon(count) {
+        const cartIcon = document.querySelector('.cart-icon');
+        if (cartIcon) {
+            cartIcon.setAttribute('data-count', count);
+        }
+    }
+});
+</script>
 {% endblock %}
+

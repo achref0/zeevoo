@@ -57,9 +57,8 @@ def checkout():
             db.session.add(order)
             product = item.product
             product.is_sold = True
-            db.session.delete(item)
 
-        db.session.delete(cart)
+        db.session.query(CartItem).filter_by(cart_id=cart.id).delete()
         db.session.commit()
 
         flash('Checkout completed successfully!', 'success')

@@ -15,7 +15,15 @@
 <body>
     <header>
         <nav>
-            <div class="logo">Zeevoo</div>
+            <div class="nav-left">
+                <div class="logo">Zeevoo</div>
+                <form action="{{ url_for('products.search') }}" method="GET" class="search-form">
+                    <div class="search-container">
+                        <input type="text" name="q" placeholder="Search products...">
+                        <button type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
             <div class="nav-links">
                 <a href="{{ url_for('main.index') }}">Home</a>
                 <a href="{{ url_for('main.store') }}">Store</a>
@@ -56,3 +64,4 @@
     </footer>
 </body>
 </html>
+
