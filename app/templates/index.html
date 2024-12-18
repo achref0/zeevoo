@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Welcome to Zeevoo{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome to Zeevoo</h1>
+    <p>Your one-stop shop for browsing, buying, and selling items.</p>
+    <a href="{{ url_for('main.store') }}" class="btn btn-primary">Browse Store</a>
+</div>
+
+<div class="featured-products">
+    <h2>Featured Products</h2>
+    <div class="product-grid">
+        {% for product in featured_products %}
+        <div class="product-card" data-product-id="{{ product.id }}">
+            <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="product-image">
+            <div class="product-info">
+                <h3 class="product-name">{{ product.name }}</h3>
+                <p class="product-price">${{ "%.2f"|format(product.price) }}</p>
+                <p class="product-description">{{ product.description }}</p>
+                <button class="add-to-cart" data-product-id="{{ product.id }}">Add to Cart</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

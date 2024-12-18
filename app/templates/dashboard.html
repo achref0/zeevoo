@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Dashboard</h1>
+    <div class="dashboard-tabs">
+        <button class="tab-button active" data-tab="items-for-sale">Items for Sale</button>
+        <button class="tab-button" data-tab="sold-items">Sold Items</button>
+        <button class="tab-button" data-tab="add-item">Add New Item</button>
+        {% if current_user.is_admin %}
+        <button class="tab-button" data-tab="approve-items">Approve Items</button>
+        {% endif %}
+    </div>
+
+    <div id="items-for-sale" class="tab-content active">
+        <h2>Items for Sale</h2>
+        <div class="product-grid">
+            {% for item in items_for_sale %}
+            <div class="product-card">
+                <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" class="product-image">
+                <div class="product-info">
+                    <h3 class="product-name">{{ item.name }}</h3>
+                    <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
+                    <p class="product-status">{% if item.is_approved %}Approved{% else %}Pending Approval{% endif %}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="sold-items" class="tab-content">
+        <h2>Sold Items</h2>
+        <div class="product-grid">
+            {% for item in sold_items %}
+            <div class="product-card">
+                <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" class="product-image">
+                <div class="product-info">
+                    <h3 class="product-name">{{ item.name }}</h3>
+                    <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
+                    <p>Sold on: {{ item.orders[0].created_at.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="add-item" class="tab-content">
+        <h2>Add New Item</h2>
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div>
+                {{ form.name.label }}
+                {{ form.name(class="form-control") }}
+                {% for error in form.name.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div>
+                {{ form.description.label }}
+                {{ form.description(class="form-control") }}
+                {% for error in form.description.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div>
+                {{ form.price.label }}
+                {{ form.price(class="form-control") }}
+                {% for error in form.price.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div>
+                {{ form.image.label }}
+                {{ form.image(class="form-control-file") }}
+                {% for error in form.image.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+    </div>
+
+    {% if current_user.is_admin %}
+    <div id="approve-items" class="tab-content">
+        <h2>Items Waiting for Approval</h2>
+        <div class="product-grid">
+            {% for item in items_to_approve %}
+            <div class="product-card">
+                <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" class="product-image">
+                <div class="product-info">
+                    <h3 class="product-name">{{ item.name }}</h3>
+                    <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
+                    <form method="POST" action="{{ url_for('admin.approve_product', product_id=item.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="approve-item">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.reject_product', product_id=item.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="reject-item">Reject</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

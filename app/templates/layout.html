@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeevoo - {% block title %}{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    
+    <!-- CSRF Token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Zeevoo</div>
+            <div class="nav-links">
+                <a href="{{ url_for('main.index') }}">Home</a>
+                <a href="{{ url_for('main.store') }}">Store</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('products.dashboard') }}">Dashboard</a>
+                    <div class="user-menu">
+                        <img src="{{ url_for('static', filename='images/' + current_user.profile_picture) }}" alt="Profile" class="profile-picture">
+                        <div class="dropdown">
+                            <a href="{{ url_for('account.account_settings') }}">Account Settings</a>
+                            <a href="{{ url_for('account.update_password') }}">Update Password</a>
+                            <a href="{{ url_for('auth.logout') }}">Log Out</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn">Login</a>
+                    <a href="{{ url_for('auth.signup') }}" class="btn">Sign Up</a>
+                {% endif %}
+                <a href="{{ url_for('main.cart') }}" class="cart-icon">🛒</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Zeevoo. All rights reserved.</p>
+    </footer>
+</body>
+</html>

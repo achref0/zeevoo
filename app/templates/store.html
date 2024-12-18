@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}Store{% endblock %}
+
+{% block content %}
+<h1>Zeevoo Store</h1>
+<div class="product-grid">
+    {% for product in products.items %}
+    <div class="product-card" data-product-id="{{ product.id }}">
+        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="product-image">
+        <div class="product-info">
+            <h3 class="product-name">{{ product.name }}</h3>
+            <p class="product-price">${{ "%.2f"|format(product.price) }}</p>
+            <p class="product-description">{{ product.description }}</p>
+            <button class="add-to-cart" data-product-id="{{ product.id }}">Add to Cart</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if products.has_prev or products.has_next %}
+<div class="pagination">
+    {% if products.has_prev %}
+        <a href="{{ url_for('store', page=products.prev_num) }}">&laquo; Previous</a>
+    {% endif %}
+    {% if products.has_next %}
+        <a href="{{ url_for('store', page=products.next_num) }}">Next &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<div id="product-modal" class="modal">
+    <div class="modal-content">
+        <!-- Product details will be populated here -->
+    </div>
+</div>
+{% endblock %}

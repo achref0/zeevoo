@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Search Results for "{{ query }}"</h1>
+    {% if products.items %}
+        <div class="product-grid">
+            {% for product in products.items %}
+                <div class="product-card" data-product-id="{{ product.id }}">
+                    <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-price">${{ "%.2f"|format(product.price) }}</p>
+                        <p class="product-description">{{ product.description[:100] }}...</p>
+                        <button class="add-to-cart" data-product-id="{{ product.id }}">Add to Cart</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% if products.has_prev or products.has_next %}
+            <div class="pagination">
+                {% if products.has_prev %}
+                    <a href="{{ url_for('products.search', q=query, page=products.prev_num) }}">&laquo; Previous</a>
+                {% endif %}
+                {% if products.has_next %}
+                    <a href="{{ url_for('products.search', q=query, page=products.next_num) }}">Next &raquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p>No results found for "{{ query }}".</p>
+    {% endif %}
+</div>
+{% endblock %}
